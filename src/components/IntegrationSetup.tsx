@@ -150,6 +150,31 @@ const IntegrationSetup = () => {
     }
   };
 
+  const disconnectIntegration = async (platform: string) => {
+    try {
+      const { error } = await supabase
+        .from('integrations')
+        .delete()
+        .eq('user_id', user?.id)
+        .eq('platform', platform);
+
+      if (error) throw error;
+
+      toast({
+        title: "Integration disconnected",
+        description: `${platform} integration has been removed`
+      });
+      
+      fetchIntegrations();
+    } catch (error) {
+      toast({
+        title: "Disconnect failed",
+        description: `Could not disconnect ${platform} integration`,
+        variant: "destructive"
+      });
+    }
+  };
+
   const getIntegrationStatus = (platform: string) => {
     return integrations.find(int => int.platform === platform && int.is_active);
   };
@@ -191,13 +216,24 @@ const IntegrationSetup = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button 
-              onClick={connectInstagram}
-              disabled={!!getIntegrationStatus('instagram')}
-              className="w-full"
-            >
-              {getIntegrationStatus('instagram') ? 'Connected' : 'Connect Instagram'}
-            </Button>
+            <div className="space-y-3">
+              <Button 
+                onClick={connectInstagram}
+                disabled={!!getIntegrationStatus('instagram')}
+                className="w-full"
+              >
+                {getIntegrationStatus('instagram') ? 'Connected' : 'Connect Instagram'}
+              </Button>
+              {getIntegrationStatus('instagram') && (
+                <Button 
+                  onClick={() => disconnectIntegration('instagram')}
+                  variant="outline"
+                  className="w-full"
+                >
+                  Disconnect
+                </Button>
+              )}
+            </div>
           </CardContent>
         </Card>
 
