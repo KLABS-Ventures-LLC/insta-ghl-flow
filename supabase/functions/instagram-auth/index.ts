@@ -28,7 +28,7 @@ serve(async (req) => {
     }
 
     const metaAppId = Deno.env.get('META_APP_ID');
-    const redirectUri = `${url.origin}/api/instagram-callback`;
+    const redirectUri = `${url.origin}/functions/v1/instagram-callback`;
     
     // Generate state parameter for security
     const state = `${userId}_${crypto.randomUUID()}`;
@@ -41,17 +41,10 @@ serve(async (req) => {
     instagramAuthUrl.searchParams.set('response_type', 'code');
     instagramAuthUrl.searchParams.set('state', state);
 
-    console.log('Instagram OAuth URL generated for user:', userId);
+    console.log('Redirecting to Instagram OAuth for user:', userId);
 
-    return new Response(
-      JSON.stringify({ 
-        authUrl: instagramAuthUrl.toString(),
-        state: state
-      }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    );
+    // Redirect to Instagram OAuth instead of returning JSON
+    return Response.redirect(instagramAuthUrl.toString(), 302);
   } catch (error) {
     console.error('Error in instagram-auth function:', error);
     return new Response(

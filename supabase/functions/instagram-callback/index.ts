@@ -39,7 +39,7 @@ serve(async (req) => {
     
     const metaAppId = Deno.env.get('META_APP_ID');
     const metaAppSecret = Deno.env.get('META_APP_SECRET');
-    const redirectUri = `${url.origin}/api/instagram-callback`;
+    const redirectUri = `${url.origin}/functions/v1/instagram-callback`;
 
     // Exchange code for access token
     const tokenResponse = await fetch('https://api.instagram.com/oauth/access_token', {
