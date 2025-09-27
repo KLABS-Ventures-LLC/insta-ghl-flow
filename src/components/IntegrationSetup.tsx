@@ -101,15 +101,7 @@ const IntegrationSetup = () => {
 
   const connectInstagram = async () => {
     try {
-      // Get Instagram OAuth URL from edge function
-      const { data, error } = await supabase.functions.invoke('instagram-auth', {
-        body: {},
-        method: 'GET'
-      });
-
-      if (error) throw error;
-
-      // Open popup window for Instagram OAuth
+      // Open popup window directly to Instagram OAuth
       const popup = window.open(
         `https://idxhqaiafptdftmdjgki.supabase.co/functions/v1/instagram-auth?userId=${user?.id}`,
         'instagram-auth',
@@ -117,6 +109,10 @@ const IntegrationSetup = () => {
         (window.screen.width / 2 - 300) + ',top=' + 
         (window.screen.height / 2 - 350)
       );
+
+      if (!popup) {
+        throw new Error('Popup blocked - please allow popups for this site');
+      }
 
       // Listen for successful authentication
       const handleMessage = (event: MessageEvent) => {
@@ -144,7 +140,7 @@ const IntegrationSetup = () => {
       console.error('Instagram connection error:', error);
       toast({
         title: "Connection failed",
-        description: "Could not initiate Instagram connection",
+        description: "Could not initiate Instagram connection. Please allow popups and try again.",
         variant: "destructive"
       });
     }
