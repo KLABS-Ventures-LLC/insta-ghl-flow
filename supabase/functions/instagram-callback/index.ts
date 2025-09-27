@@ -41,8 +41,8 @@ serve(async (req) => {
     const metaAppSecret = Deno.env.get('META_APP_SECRET');
     const redirectUri = `${url.origin}/functions/v1/instagram-callback`;
 
-    // Exchange code for access token
-    const tokenResponse = await fetch('https://api.instagram.com/oauth/access_token', {
+    // Exchange code for access token via Facebook Graph API
+    const tokenResponse = await fetch('https://graph.facebook.com/v18.0/oauth/access_token', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -50,7 +50,6 @@ serve(async (req) => {
       body: new URLSearchParams({
         client_id: metaAppId!,
         client_secret: metaAppSecret!,
-        grant_type: 'authorization_code',
         redirect_uri: redirectUri,
         code: code,
       }),
@@ -67,29 +66,41 @@ serve(async (req) => {
     const tokenData = await tokenResponse.json();
     const accessToken = tokenData.access_token;
 
-    // Get long-lived access token
-    const longLivedTokenResponse = await fetch(
-      `https://graph.instagram.com/access_token?grant_type=ig_exchange_token&client_secret=${metaAppSecret}&access_token=${accessToken}`
+    // Get user's Facebook pages (which include Instagram Business accounts)
+    const pagesResponse = await fetch(
+      `https://graph.facebook.com/v18.0/me/accounts?access_token=${accessToken}`
     );
 
-    let longLivedToken = accessToken;
-    let expiresAt = null;
+    let instagramAccountId = null;
+    let instagramUsername = 'Business Account';
 
-    if (longLivedTokenResponse.ok) {
-      const longLivedData = await longLivedTokenResponse.json();
-      longLivedToken = longLivedData.access_token;
-      expiresAt = new Date(Date.now() + (longLivedData.expires_in * 1000)).toISOString();
-    }
-
-    // Get user profile info
-    const profileResponse = await fetch(
-      `https://graph.instagram.com/me?fields=id,username&access_token=${longLivedToken}`
-    );
-
-    let username = 'Unknown';
-    if (profileResponse.ok) {
-      const profileData = await profileResponse.json();
-      username = profileData.username;
+    if (pagesResponse.ok) {
+      const pagesData = await pagesResponse.json();
+      
+      // Find Instagram Business account connected to pages
+      for (const page of pagesData.data || []) {
+        const igResponse = await fetch(
+          `https://graph.facebook.com/v18.0/${page.id}?fields=instagram_business_account&access_token=${accessToken}`
+        );
+        
+        if (igResponse.ok) {
+          const igData = await igResponse.json();
+          if (igData.instagram_business_account) {
+            instagramAccountId = igData.instagram_business_account.id;
+            
+            // Get Instagram account info
+            const igInfoResponse = await fetch(
+              `https://graph.facebook.com/v18.0/${instagramAccountId}?fields=username&access_token=${accessToken}`
+            );
+            
+            if (igInfoResponse.ok) {
+              const igInfo = await igInfoResponse.json();
+              instagramUsername = igInfo.username || 'Business Account';
+            }
+            break;
+          }
+        }
+      }
     }
 
     // Initialize Supabase client
@@ -103,9 +114,9 @@ serve(async (req) => {
       .upsert({
         user_id: userId,
         platform: 'instagram',
-        access_token: longLivedToken,
-        refresh_token: tokenData.user_id?.toString(),
-        expires_at: expiresAt,
+        access_token: accessToken,
+        refresh_token: instagramAccountId,
+        expires_at: null, // Facebook tokens don't expire like Instagram Basic Display
         is_active: true
       }, {
         onConflict: 'user_id,platform'
@@ -119,13 +130,13 @@ serve(async (req) => {
       );
     }
 
-    console.log(`Instagram integration successful for user ${userId} with username ${username}`);
+    console.log(`Instagram Graph API integration successful for user ${userId} with account ${instagramUsername}`);
 
     return new Response(
       `<html><body><script>
-        window.opener?.postMessage({ type: 'INSTAGRAM_AUTH_SUCCESS', username: '${username}' }, '*');
+        window.opener?.postMessage({ type: 'INSTAGRAM_AUTH_SUCCESS', username: '${instagramUsername}' }, '*');
         window.close();
-      </script><p>Instagram connected successfully! You can close this window.</p></body></html>`,
+      </script><p>Instagram Business Account connected successfully! You can close this window.</p></body></html>`,
       { headers: { 'Content-Type': 'text/html' } }
     );
   } catch (error) {

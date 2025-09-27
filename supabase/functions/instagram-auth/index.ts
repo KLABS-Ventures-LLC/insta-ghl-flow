@@ -33,18 +33,18 @@ serve(async (req) => {
     // Generate state parameter for security
     const state = `${userId}_${crypto.randomUUID()}`;
     
-    // Instagram OAuth URL with required permissions
-    const instagramAuthUrl = new URL('https://api.instagram.com/oauth/authorize');
-    instagramAuthUrl.searchParams.set('client_id', metaAppId!);
-    instagramAuthUrl.searchParams.set('redirect_uri', redirectUri);
-    instagramAuthUrl.searchParams.set('scope', 'user_profile,user_media,instagram_basic,pages_read_engagement,instagram_manage_messages');
-    instagramAuthUrl.searchParams.set('response_type', 'code');
-    instagramAuthUrl.searchParams.set('state', state);
+    // Facebook Login OAuth URL with Instagram Graph API permissions
+    const facebookAuthUrl = new URL('https://www.facebook.com/v18.0/dialog/oauth');
+    facebookAuthUrl.searchParams.set('client_id', metaAppId!);
+    facebookAuthUrl.searchParams.set('redirect_uri', redirectUri);
+    facebookAuthUrl.searchParams.set('scope', 'pages_show_list,pages_read_engagement,instagram_basic,instagram_manage_messages,pages_manage_metadata');
+    facebookAuthUrl.searchParams.set('response_type', 'code');
+    facebookAuthUrl.searchParams.set('state', state);
 
-    console.log('Redirecting to Instagram OAuth for user:', userId);
+    console.log('Redirecting to Facebook OAuth for Instagram Graph API access, user:', userId);
 
-    // Redirect to Instagram OAuth instead of returning JSON
-    return Response.redirect(instagramAuthUrl.toString(), 302);
+    // Redirect to Facebook OAuth for Instagram Graph API access
+    return Response.redirect(facebookAuthUrl.toString(), 302);
   } catch (error) {
     console.error('Error in instagram-auth function:', error);
     return new Response(
