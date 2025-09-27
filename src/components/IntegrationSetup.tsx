@@ -100,11 +100,34 @@ const IntegrationSetup = () => {
   };
 
   const connectInstagram = async () => {
-    // Placeholder for Instagram OAuth flow
-    toast({
-      title: "Instagram Integration",
-      description: "Instagram integration coming soon - will use Meta Business API",
-    });
+    // Create a test Instagram integration for demo purposes
+    try {
+      const { error } = await supabase
+        .from('integrations')
+        .upsert({
+          user_id: user?.id,
+          platform: 'instagram',
+          access_token: 'test_token_' + Date.now(),
+          is_active: true
+        }, {
+          onConflict: 'user_id,platform'
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Instagram connected",
+        description: "Test Instagram integration connected successfully"
+      });
+      
+      fetchIntegrations();
+    } catch (error) {
+      toast({
+        title: "Connection failed",
+        description: "Could not connect Instagram integration",
+        variant: "destructive"
+      });
+    }
   };
 
   const getIntegrationStatus = (platform: string) => {

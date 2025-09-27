@@ -5,6 +5,7 @@ import DashboardLayout from '@/components/DashboardLayout';
 import IntegrationSetup from '@/components/IntegrationSetup';
 import PipelineDisplay from '@/components/PipelineDisplay';
 import AutomationManager from '@/components/AutomationManager';
+import TestMessageInterface from '@/components/TestMessageInterface';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const Index = () => {
@@ -40,10 +41,11 @@ const Index = () => {
         </div>
 
         <Tabs defaultValue="integrations" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="integrations">Integrations</TabsTrigger>
             <TabsTrigger value="pipelines">Pipelines</TabsTrigger>
             <TabsTrigger value="automations">Automations</TabsTrigger>
+            <TabsTrigger value="test">Test</TabsTrigger>
           </TabsList>
           
           <TabsContent value="integrations" className="mt-6">
@@ -56,6 +58,10 @@ const Index = () => {
           
           <TabsContent value="automations" className="mt-6">
             <AutomationManager />
+          </TabsContent>
+          
+          <TabsContent value="test" className="mt-6">
+            <TestMessageInterface />
           </TabsContent>
         </Tabs>
       </div>
