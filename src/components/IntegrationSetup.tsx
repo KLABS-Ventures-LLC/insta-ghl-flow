@@ -100,31 +100,51 @@ const IntegrationSetup = () => {
   };
 
   const connectInstagram = async () => {
-    // Create a test Instagram integration for demo purposes
     try {
-      const { error } = await supabase
-        .from('integrations')
-        .upsert({
-          user_id: user?.id,
-          platform: 'instagram',
-          access_token: 'test_token_' + Date.now(),
-          is_active: true
-        }, {
-          onConflict: 'user_id,platform'
-        });
+      // Get Instagram OAuth URL from edge function
+      const { data, error } = await supabase.functions.invoke('instagram-auth', {
+        body: {},
+        method: 'GET'
+      });
 
       if (error) throw error;
 
-      toast({
-        title: "Instagram connected",
-        description: "Test Instagram integration connected successfully"
-      });
-      
-      fetchIntegrations();
+      // Open popup window for Instagram OAuth
+      const popup = window.open(
+        `https://idxhqaiafptdftmdjgki.supabase.co/functions/v1/instagram-auth?userId=${user?.id}`,
+        'instagram-auth',
+        'width=600,height=700,left=' + 
+        (window.screen.width / 2 - 300) + ',top=' + 
+        (window.screen.height / 2 - 350)
+      );
+
+      // Listen for successful authentication
+      const handleMessage = (event: MessageEvent) => {
+        if (event.data.type === 'INSTAGRAM_AUTH_SUCCESS') {
+          toast({
+            title: "Instagram connected",
+            description: `Successfully connected Instagram account: @${event.data.username}`,
+          });
+          fetchIntegrations();
+          window.removeEventListener('message', handleMessage);
+        }
+      };
+
+      window.addEventListener('message', handleMessage);
+
+      // Check if popup was closed without completion
+      const checkClosed = setInterval(() => {
+        if (popup?.closed) {
+          clearInterval(checkClosed);
+          window.removeEventListener('message', handleMessage);
+        }
+      }, 1000);
+
     } catch (error) {
+      console.error('Instagram connection error:', error);
       toast({
         title: "Connection failed",
-        description: "Could not connect Instagram integration",
+        description: "Could not initiate Instagram connection",
         variant: "destructive"
       });
     }
@@ -167,7 +187,7 @@ const IntegrationSetup = () => {
               )}
             </CardTitle>
             <CardDescription>
-              Connect your Instagram Business account to monitor messages.
+              Connect your Instagram Business account to monitor outbound messages and trigger automations.
             </CardDescription>
           </CardHeader>
           <CardContent>
