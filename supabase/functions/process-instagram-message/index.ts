@@ -48,7 +48,7 @@ serve(async (req) => {
       );
     }
 
-    // Check if message contains any keywords from automations
+    // Check if outbound message contains any keywords from automations
     const messageText = message.toLowerCase();
     let matchedAutomation = null;
 
@@ -64,9 +64,9 @@ serve(async (req) => {
     }
 
     if (!matchedAutomation) {
-      console.log('No matching keywords found in message');
+      console.log('No matching keywords found in outbound message');
       return new Response(
-        JSON.stringify({ message: 'No matching keywords found' }),
+        JSON.stringify({ message: 'No matching keywords found in outbound message' }),
         { 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
@@ -117,7 +117,7 @@ serve(async (req) => {
         );
       }
 
-      console.log(`Opportunity ${opportunityId} moved to stage ${matchedAutomation.ghl_stage_id} via automation: ${matchedAutomation.name}`);
+      console.log(`Opportunity ${opportunityId} moved to stage ${matchedAutomation.ghl_stage_id} via outbound message automation: ${matchedAutomation.name}`);
     }
 
     return new Response(

@@ -208,7 +208,7 @@ const AutomationManager = () => {
         <div>
           <h2 className="text-2xl font-bold text-foreground">Automations</h2>
           <p className="text-muted-foreground">
-            Create rules to automatically move opportunities based on Instagram keywords.
+            Create rules to automatically move opportunities when your outbound Instagram messages contain specific keywords.
           </p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -224,7 +224,7 @@ const AutomationManager = () => {
                 {editingAutomation ? 'Edit Automation' : 'Create New Automation'}
               </DialogTitle>
               <DialogDescription>
-                Set up keyword triggers to automatically move opportunities in your GHL pipeline.
+                Set up keyword triggers to automatically move opportunities when you send outbound Instagram messages containing specific keywords.
               </DialogDescription>
             </DialogHeader>
             <Form {...form}>
@@ -249,7 +249,7 @@ const AutomationManager = () => {
                     <FormItem>
                       <FormLabel>Keywords (comma separated)</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g., interested, pricing, buy now" {...field} />
+                        <Input placeholder="e.g., pricing sent, demo scheduled, contract sent" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

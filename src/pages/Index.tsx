@@ -35,7 +35,7 @@ const Index = () => {
         <div className="text-center">
           <h1 className="text-3xl font-bold text-foreground mb-2">Welcome to InstaFlow</h1>
           <p className="text-lg text-muted-foreground">
-            Automate your Instagram to GoHighLevel workflow
+            Automate your outbound Instagram messaging workflow with GoHighLevel
           </p>
         </div>
 
